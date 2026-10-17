@@ -38,3 +38,9 @@ class ModelInfoResponse(BaseModel):
     feature_dimension: int
     champion_metrics: dict
     synergy_threshold: str = "Gamma < 1.0 is Synergistic; Gamma < 0.5 is High Synergy"
+
+class ChemicalReactionInput(BaseModel):
+    smiles_1: str = Field(..., description="SMILES string representation of Compound 1")
+    smiles_2: str = Field(..., description="SMILES string representation of Compound 2")
+    fetch_pubchem: Optional[bool] = Field(default=False, description="Query PubChem online metadata")
+

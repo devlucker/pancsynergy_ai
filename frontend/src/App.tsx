@@ -4,6 +4,8 @@ import { useBackend } from '@/hooks/useBackend';
 import { Sidebar, TopBar } from '@/components/Layout';
 import Overview from '@/pages/Overview';
 import PredictionLab from '@/pages/PredictionLab';
+import ReactionPropertiesLab from '@/pages/ReactionPropertiesLab';
+import CancerImpactDynamics from '@/pages/CancerImpactDynamics';
 import ModelPerformance from '@/pages/ModelPerformance';
 import DatasetExplorer from '@/pages/DatasetExplorer';
 import BatchScreening from '@/pages/BatchScreening';
@@ -18,7 +20,11 @@ export default function App() {
       case 'overview':
         return <Overview backend={backend} onNavigate={setCurrentPage} />;
       case 'prediction-lab':
-        return <PredictionLab backend={backend} />;
+        return <PredictionLab backend={backend} onNavigate={setCurrentPage} />;
+      case 'reaction-properties':
+        return <ReactionPropertiesLab onNavigate={setCurrentPage} />;
+      case 'cancer-impact':
+        return <CancerImpactDynamics onNavigate={setCurrentPage} />;
       case 'model-performance':
         return <ModelPerformance backend={backend} />;
       case 'dataset-explorer':

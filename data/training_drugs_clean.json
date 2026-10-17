@@ -1,0 +1,194 @@
+{
+  "Pralatrexate": {
+    "drug_name": "Pralatrexate",
+    "smiles": "NC1=NC(N)=C2N=C(CC(CC#C)C3=CC=C(C=C3)C(=O)N[C@@H](CCC(O)=O)C(O)=O)C=NC2=N1",
+    "ac50": -7.274,
+    "classType": "Dihydrofolate Reductase (DHFR) Inhibitors"
+  },
+  "Daporinad": {
+    "drug_name": "Daporinad",
+    "smiles": "O=C(NCCCCC1CCN(CC1)C(=O)C2=CC=CC=C2)\\C=C\\C3=CN=CC=C3",
+    "ac50": -7.532,
+    "classType": "NAMPT Inhibitor"
+  },
+  "RGB-286147": {
+    "drug_name": "RGB-286147",
+    "smiles": "CC(C)C1=NN(C2=C1C(=O)NC(CC3=CC=C(OCCO)C=C3)=N2)C4=C(Cl)C=CC=C4Cl",
+    "ac50": -7.182,
+    "classType": "CDK1/2/3/7/9 Inhibitor"
+  },
+  "GMX-1778": {
+    "drug_name": "GMX-1778",
+    "smiles": "ClC1=CC=C(OCCCCCCN\\C(NC2=CC=NC=C2)=N/C#N)C=C1",
+    "ac50": -8.332,
+    "classType": "IKK beta Inhibitor"
+  },
+  "KX-01": {
+    "drug_name": "KX-01",
+    "smiles": "O=C(CC1=CC=C(C=N1)C2=CC=C(OCCN3CCOCC3)C=C2)NCC4=CC=CC=C4",
+    "ac50": -7.432,
+    "classType": "Src Kinase Inhibitor"
+  },
+  "Bortezomib": {
+    "drug_name": "Bortezomib",
+    "smiles": "CC(C)C[C@H](NC(=O)[C@H](CC1=CC=CC=C1)NC(=O)C2=NC=CN=C2)B(O)O",
+    "ac50": -7.432,
+    "classType": "Proteasome Inhibitor"
+  },
+  "Sepantronium bromide": {
+    "drug_name": "Sepantronium bromide",
+    "smiles": "COCCN1C(C)=[N+](CC2=NC=CN=C2)C3=C1C(=O)C4=CC=CC=C4C3=O",
+    "ac50": -8.382,
+    "classType": "Survivin Inhibitor"
+  },
+  "CPG-52364": {
+    "drug_name": "CPG-52364",
+    "smiles": "COC1=C(OC)C=C2C(NCCN3CCOCC3)=NC(=NC2=C1)C4=CC=C(C=C4)N5CCN(C)CC5",
+    "ac50": -7.732,
+    "classType": "TLR 7, 8 and 9 Antagonist"
+  },
+  "HMSL10077": {
+    "drug_name": "HMSL10077",
+    "smiles": "CN1C=C(C=N1)C2=CC=C3N=CC4=C(N(C(=O)C=C4)C5=CC6=C(CCN6C(=O)C=C)C=C5)C3=C2",
+    "ac50": -6.032,
+    "classType": "BTK Inhibitor"
+  },
+  "Dinaciclib (SCH727965)": {
+    "drug_name": "Dinaciclib (SCH727965)",
+    "smiles": "CCC1=C2N=C(C=C(NCC3=CC=C[N+]([O-])=C3)N2N=C1)N4CCCC[C@H]4CCO",
+    "ac50": -7.182,
+    "classType": "CDK1/2/5/9 Inhibitor"
+  },
+  "MK-1775": {
+    "drug_name": "MK-1775",
+    "smiles": "CN1CCN(CC1)C2=CC=C(NC3=NC=C4C(=O)N(CC=C)N(C4=N3)C5=CC=CC(=N5)C(C)(C)O)C=C2",
+    "ac50": -5.882,
+    "classType": "Wee1 Kinase Inhibitor"
+  },
+  "Panobinostat": {
+    "drug_name": "Panobinostat",
+    "smiles": "CC1=C(CCNCC2=CC=C(\\C=C\\C(=O)NO)C=C2)C3=CC=CC=C3N1",
+    "ac50": -6.232,
+    "classType": "HDAC Inhibitor"
+  },
+  "Carfilzomib": {
+    "drug_name": "Carfilzomib",
+    "smiles": "CC(C)C[C@H](NC(=O)[C@H](CCC1=CC=CC=C1)NC(=O)CN2CCOCC2)C(=O)N[C@@H](CC3=CC=CC=C3)C(=O)N[C@@H](CC(C)C)C(=O)[C@@]4(C)CO4",
+    "ac50": -7.482,
+    "classType": "Proteasome Inhibitor"
+  },
+  "Fascaplysin": {
+    "drug_name": "Fascaplysin",
+    "smiles": "O=C1C2=CC=CC=C2[N+]3=C1C4=C(C=C3)C5=CC=CC=C5N4",
+    "ac50": -5.932,
+    "classType": "CDK4/6 Inhibitor"
+  },
+  "Oprozomib": {
+    "drug_name": "Oprozomib",
+    "smiles": "COC[C@H](NC(=O)[C@H](COC)NC(=O)C1=CN=C(C)S1)C(=O)N[C@@H](CC2=CC=CC=C2)C(=O)[C@@]3(C)CO3",
+    "ac50": -6.832,
+    "classType": "Proteasome Inhibitor"
+  },
+  "CAY-10581": {
+    "drug_name": "CAY-10581",
+    "smiles": "CC1(C)OC2=C([C@H](NCC3=CC=CC=C3)[C@@H]1O)C(=O)C4=CC=CC=C4C2=O",
+    "ac50": -5.482,
+    "classType": "IDO Inhibitor"
+  },
+  "GW-843682X": {
+    "drug_name": "GW-843682X",
+    "smiles": "COC1=CC2=C(C=C1OC)N(C=N2)C3=CC(OCC4=C(C=CC=C4)C(F)(F)F)=C(S3)C(N)=O",
+    "ac50": -5.832,
+    "classType": "Polo-like Kinase-1 (Plk-1) Inhibitor"
+  },
+  "NSC-319726": {
+    "drug_name": "NSC-319726",
+    "smiles": "C\\C(=N/NC(=S)N1CCC1)C2=NC=CC=C2",
+    "ac50": -8.732,
+    "classType": "Mutant p53 Activator"
+  },
+  "IVX-214": {
+    "drug_name": "IVX-214",
+    "smiles": "COC1=CC=C(C=C1)[S+]([O-])(=O)N(C(C)=O)C2=C(\\C=C\\C3=CC=N(=O)C=C3)C=CC=C2",
+    "ac50": -6.082,
+    "classType": "Polo-like Kinase-1 (Plk-1) Inhibitor"
+  },
+  "BMS-3": {
+    "drug_name": "BMS-3",
+    "smiles": "FC(F)C1=NN(C(=C1)C2=CN=C(NC(=O)C3CC3)S2)C4=C(Cl)C=CC=C4Cl",
+    "ac50": -5.932,
+    "classType": "LIMK Inhibitor"
+  },
+  "NCGC00188382-01": {
+    "drug_name": "NCGC00188382-01",
+    "smiles": "CC(NCC1=CC=C2N(CC(C)(C)O)\\C(NC2=C1)=N\\C(=O)C3=CC=C(S3)C4=CNN=C4)C(C)(C)C",
+    "ac50": -6.132,
+    "classType": "ITK inhibitor"
+  },
+  "BS-194": {
+    "drug_name": "BS-194",
+    "smiles": "CC(C)C1=C2N=C(N[C@@H](CO)[C@H](O)CO)C=C(NCC3=CC=CC=C3)N2N=C1",
+    "ac50": -6.232,
+    "classType": "CDK1/2/5/9 Inhibitor"
+  },
+  "Akt-I-1,2": {
+    "drug_name": "Akt-I-1,2",
+    "smiles": "CC(C)(N)C1=CC=C(C=C1)C2=NC3=C(C=CC=C3)N=C2C4=CC=CC=C4",
+    "ac50": -6.532,
+    "classType": "AKT Inhibitor"
+  },
+  "Volasertib": {
+    "drug_name": "Volasertib",
+    "smiles": "CC[C@H]1N(C(C)C)C2=NC(NC3=CC=C(C=C3OC)C(=O)NC4CCC(CC4)N5CCN(CC6CC6)CC5)=NC=C2N(C)C1=O",
+    "ac50": -6.982,
+    "classType": "Polo-like Kinase-1 (Plk-1) Inhibitor"
+  },
+  "JS-59-4": {
+    "drug_name": "JS-59-4",
+    "smiles": "CCOC(=O)N1CCN(CC1)[N+](\\[O-])=N\\OC2=CC=C(C=C2C#N)[N+]([O-])=O",
+    "ac50": -5.982,
+    "classType": "nitric oxide donors"
+  },
+  "BI-2536": {
+    "drug_name": "BI-2536",
+    "smiles": "CC[C@H]1N(C2CCCC2)C3=NC(NC4=CC=C(C=C4OC)C(=O)NC5CCN(C)CC5)=NC=C3N(C)C1=O",
+    "ac50": -7.482,
+    "classType": "Polo-like Kinase-1 (Plk-1) Inhibitor"
+  },
+  "Parogrelil": {
+    "drug_name": "Parogrelil",
+    "smiles": "ClC1=CC=C(CCCOC2=NNC(=O)C(Br)=C2NCC3=CN=CC=C3)C=C1",
+    "ac50": -6.232,
+    "classType": "Phosphodiesterase III/Va (PDE) Inhibitor"
+  },
+  "GSK-461364A": {
+    "drug_name": "GSK-461364A",
+    "smiles": "C[C@@H](OC1=C(SC(=C1)N2C=NC3=C2C=C(CN4CCN(C)CC4)C=C3)C(N)=O)C5=CC=CC=C5C(F)(F)F",
+    "ac50": -7.282,
+    "classType": "Polo-like Kinase-1 (Plk-1) Inhibitor"
+  },
+  "Osanetant": {
+    "drug_name": "Osanetant",
+    "smiles": "CN(C(C)=O)C1(CCN(CCC[C@@]2(CCCN(C2)C(=O)C3=CC=CC=C3)C4=CC=C(Cl)C(Cl)=C4)CC1)C5=CC=CC=C5",
+    "ac50": -7.032,
+    "classType": "Tachykinin NK3 Antagonist"
+  },
+  "Methotrexate": {
+    "drug_name": "Methotrexate",
+    "smiles": "CN(CC1=CN=C2N=C(N)N=C(N)C2=N1)C3=CC=C(C=C3)C(=O)N[C@@H](CCC(O)=O)C(O)=O",
+    "ac50": -6.682,
+    "classType": "Dihydrofolate Reductase (DHFR) Inhibitor"
+  },
+  "Aminopterin": {
+    "drug_name": "Aminopterin",
+    "smiles": "NC1=NC2=NC=C(CNC3=CC=C(C=C3)C(=O)NC(CCC(O)=O)C(O)=O)N=C2C(N)=N1",
+    "ac50": -6.932,
+    "classType": "Dihydrofolate Reductase (DHFR) Inhibitor"
+  },
+  "Niacin": {
+    "drug_name": "Niacin",
+    "smiles": "OC(=O)C1=CC=CN=C1",
+    "ac50": -5.582,
+    "classType": "Nicotinic acid"
+  }
+}
