@@ -159,16 +159,7 @@ graph TB
 
 ---
 
-### Cloud Reference Architecture Mapping
 
-Below is the enterprise cloud hosting blueprint adapted to PancSynergy AI:
-
-<div align="center">
-  <img src="docs/images/demo_reference_cloud_arch.png" alt="Cloud Deployment Blueprint Reference" width="650" />
-  <p><em>Enterprise Cloud Architecture Blueprint (Azure App Service Plan, Deployment Slots, SQL/Blob Storage, and GitHub CI/CD)</em></p>
-</div>
-
-| Cloud Architecture Component | PancSynergy AI Mapping & Implementation |
 |---|---|
 | **App Service Plan & Instances** | Hosts the containerized FastAPI backend (Port 8081) and Vite static frontend with multi-instance load balancing. |
 | **Deployment Slots (Staging $\rightarrow$ Production)** | Enables zero-downtime blue/green deployment; test newly trained `.pkl` models in staging before swapping to production. |
