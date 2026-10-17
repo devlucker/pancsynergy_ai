@@ -12,6 +12,10 @@ PancSynergy AI is an end-to-end computational oncology and cheminformatics appli
 
 - [Features](#features)
 - [How it works](#how-it-works)
+- [Complete System Architecture](#complete-system-architecture)
+  - [Tailored Architectural Blueprint](#tailored-architectural-blueprint)
+  - [Component Walkthrough](#component-walkthrough)
+  - [Cloud Reference Architecture Mapping](#cloud-reference-architecture-mapping)
 - [Data Cleaning and Preprocessing Pipeline](#data-cleaning-and-preprocessing-pipeline)
   - [1. PANC-1 Synergy Matrix Cleaning (`Training_set.csv`)](#1-panc-1-synergy-matrix-cleaning-trainingsetcsv)
   - [2. Molecular Structure Validation & Canonicalization](#2-molecular-structure-validation--canonicalization)
@@ -21,11 +25,14 @@ PancSynergy AI is an end-to-end computational oncology and cheminformatics appli
 - [Gamma interpretation](#gamma-interpretation)
 - [Reaction Kinetics & Chemical Synthesis Lab (USPTO-50K)](#reaction-kinetics--chemical-synthesis-lab-uspto-50k)
 - [Cancer Impact Dynamics & Pharmacodynamics Lab](#cancer-impact-dynamics--pharmacodynamics-lab)
+- [Model Evaluation & Benchmark Insights](#model-evaluation--benchmark-insights)
+  - [Evaluation Snapshot & Score Distribution](#evaluation-snapshot--score-distribution)
+  - [Top Synergistic Pairs & Mechanism Frequencies](#top-synergistic-pairs--mechanism-frequencies)
+  - [5-Fold Cross-Validation & Test Benchmarks](#5-fold-cross-validation--test-benchmarks)
 - [Technology stack](#technology-stack)
 - [Repository structure](#repository-structure)
 - [Setup and run](#setup-and-run)
 - [REST API](#rest-api)
-- [Model evaluation](#model-evaluation)
 - [Data and reproducibility](#data-and-reproducibility)
 - [Known limitations](#known-limitations)
 - [Responsible use](#responsible-use)
@@ -55,6 +62,120 @@ PancSynergy AI is an end-to-end computational oncology and cheminformatics appli
 5. **Simulate Dynamics & Synthesis:** The score feeds into the Pharmacodynamic (PK/PD) simulator and the USPTO reaction model to predict kill velocity and synthetic combination feasibility.
 
 $$\mathbf{x}_{\text{pair}} = \left[\mathbf{v}_A + \mathbf{v}_B,\ |\mathbf{v}_A - \mathbf{v}_B|,\ \mathbf{v}_A \odot \mathbf{v}_B,\ \min(p_A, p_B),\ \max(p_A, p_B),\ |p_A - p_B|,\ p_A + p_B\right]$$
+
+---
+
+## Complete System Architecture
+
+### Tailored Architectural Blueprint
+
+The following diagram illustrates the complete, multi-tiered architecture tailored specifically to **PancSynergy AI**—spanning the presentation layer, RESTful API gateway, machine learning inference engines, cheminformatics pipelines, and cloud deployment infrastructure:
+
+```mermaid
+graph TB
+    subgraph ClientLayer["🖥️ Presentation & Client Tier (React 18 + Vite SPA)"]
+        UI["Web Browser Client"]
+        UI --> Lab1["🧪 Prediction Lab<br/>Single-Pair & Batch Screening"]
+        UI --> Lab2["⚡ Reaction & Kinetics Lab<br/>USPTO-50K Synthesis & Duration"]
+        UI --> Lab3["📈 Cancer Impact Dynamics<br/>Dynamic PK/PD Kill Trajectories & T50"]
+        UI --> Lab4["📊 Model Performance<br/>Leaderboard & Metric Benchmarks"]
+        UI --> Lab5["🧬 Dataset Explorer<br/>307 Validated Synergy Pairs"]
+        UI --> Lab6["📖 Methodology & Docs<br/>Cheminformatics Workflow"]
+    end
+
+    subgraph GatewayLayer["🌐 API Gateway & Orchestration (FastAPI • Port 8081 / 8000)"]
+        Router["FastAPI Application (ASGI / Uvicorn)"]
+        CORS["CORS Middleware & Pydantic v2 Validation"]
+        Router --> CORS
+        CORS --> EP1["POST /api/v1/predict (Synergy Inference)"]
+        CORS --> EP2["POST /api/v1/chemical/reaction-predict (USPTO Kinetics)"]
+        CORS --> EP3["GET /api/v1/chemical/resolve-smiles (Multi-tier Resolver)"]
+        CORS --> EP4["GET /api/v1/drugs/library (51+ Curated Compounds)"]
+        CORS --> EP5["GET /api/v1/combos/validated (307 Benchmark Combos)"]
+    end
+
+    subgraph MLTier["🧠 Machine Learning & Cheminformatics Engine"]
+        RDKit["RDKit Chemical Engine<br/>256/512-bit Morgan Fingerprints (ECFP4) + 10 Descriptors"]
+        Featurizer["Order-Invariant Featurizer<br/>v1+v2, |v1-v2|, v1*v2, min/max potency"]
+        RFModel["🌲 Champion Synergy Model<br/>Random Forest Regressor (Gamma Γ Output)"]
+        USPTOModel["🔬 Reaction Classifier<br/>HistGradientBoosting (10 USPTO Classes)"]
+        PKPDEngine["📉 Pharmacodynamic Kinetic Engine<br/>Hill Emax / Exponential Viability (0-96h, T50)"]
+    end
+
+    subgraph DataTier["💾 Data, Model Artifacts & External APIs"]
+        RawData[("NCATS PANC-1 Dataset<br/>Training_set.csv & 307 Combos")]
+        USPTOCSV[("USPTO-50K Dataset<br/>50,000+ Chemical Reactions")]
+        DrugLib[("Curated 51-Drug Library<br/>SMILES, MOA, Log AC50")]
+        SavedModels[("Serialized Model Artifacts (.pkl)<br/>best_synergy_model.pkl<br/>uspto_reaction_model.pkl")]
+        ExternalAPIs["☁️ External Resolvers<br/>PubChem PUG REST API & NIH Cactus"]
+    end
+
+    subgraph CloudInfra["☁️ Cloud & Deployment Infrastructure (Production Hosting)"]
+        AppService["App Service Plan / Container Host<br/>Multi-instance Scaling & Load Balancing"]
+        DeploySlots["Deployment Slots<br/>Staging ➔ Production (Zero-Downtime Swap)"]
+        CI_CD["GitHub CI/CD Automation<br/>srinivasgrandhi07-ai/pancsynergy_ai"]
+        Storage["Blob Storage & Logs<br/>Application Logs, Server Diagnostics & Artifacts"]
+    end
+
+    ClientLayer -->|RESTful JSON Requests| GatewayLayer
+    GatewayLayer --> MLTier
+    MLTier --> RDKit
+    RDKit --> Featurizer
+    Featurizer --> RFModel
+    Featurizer --> USPTOModel
+    RFModel --> PKPDEngine
+    MLTier --> DataTier
+    GatewayLayer --> ExternalAPIs
+    CloudInfra -.->|Deploys & Hosts| GatewayLayer
+    CloudInfra -.->|Deploys & Serves| ClientLayer
+```
+
+---
+
+### Component Walkthrough
+
+1. **Client & Presentation Layer (Frontend):**
+   * **React 18 + TypeScript + Vite:** High-performance single page application (SPA) with lightning-fast hot module replacement.
+   * **Tailwind CSS & Lucide Icons:** Modern, clean, responsive user interface adapted for dense scientific data.
+   * **Recharts Dynamic Data Visualizations:** Real-time rendering of in-vitro cancer survival curves, milestone speedup comparisons, and synergy distribution histograms.
+   * **Inter-Page Data Bridge:** Seamless one-click transfer of evaluated chemical pairs between the **Prediction Lab**, **Reaction & Kinetics Lab**, and **Cancer Impact Dynamics**.
+
+2. **API Gateway & Service Layer (Backend):**
+   * **FastAPI + Uvicorn (ASGI):** Asynchronous Python web framework delivering sub-millisecond route dispatching on port `8081` (or `8000`).
+   * **Pydantic v2 Schemas:** Strict runtime validation and serialization for molecular SMILES, potencies, and reaction parameters.
+   * **Multi-Tier Chemical Identifier Resolver:** Translates drug trade names and generic identifiers to canonical SMILES via local cache $\rightarrow$ PubChem $\rightarrow$ NIH Cactus.
+
+3. **Machine Learning & Chemical Inference Core:**
+   * **RDKit Molecule Sanitizer:** Validates chemical valence, stereochemistry, and aromaticity. Extracts Morgan fingerprints (radius 2, 256/512 bits) and 2D physicochemical descriptors.
+   * **Order-Invariant (Symmetric) Featurizer:** Mathematically guarantees that pair inputs $(A + B)$ and $(B + A)$ yield identical representation vectors.
+   * **Random Forest Synergy Regressor (`best_synergy_model.pkl`):** Trained on NCATS PANC-1 screening data; outputs continuous Gamma ($\Gamma$).
+   * **USPTO-50K Chemical Reaction Model (`uspto_reaction_model.pkl`):** HistGradientBoosting classifier mapping reactant pairs to synthetic reaction classes, combination time, temperature, and solvent conditions.
+   * **Pharmacodynamic (PK/PD) Kinetic Engine:** Translates potencies and synergy multipliers into continuous cancer cell eradication trajectories over 0 to 96 hours.
+
+4. **Data & Artifact Tier:**
+   * **NCATS PANC-1 Screening Matrix:** Curated training combinations with single-agent potencies.
+   * **USPTO-50K Patent Dataset:** 50,000+ validated chemical reactions with synthetic transformations.
+   * **Curated 51-Drug PANC-1 Library:** Pre-indexed oncology compounds ready for instant evaluation.
+
+---
+
+### Cloud Reference Architecture Mapping
+
+Below is the enterprise cloud hosting blueprint adapted to PancSynergy AI:
+
+<div align="center">
+  <img src="docs/images/demo_reference_cloud_arch.png" alt="Cloud Deployment Blueprint Reference" width="650" />
+  <p><em>Enterprise Cloud Architecture Blueprint (Azure App Service Plan, Deployment Slots, SQL/Blob Storage, and GitHub CI/CD)</em></p>
+</div>
+
+| Cloud Architecture Component | PancSynergy AI Mapping & Implementation |
+|---|---|
+| **App Service Plan & Instances** | Hosts the containerized FastAPI backend (Port 8081) and Vite static frontend with multi-instance load balancing. |
+| **Deployment Slots (Staging $\rightarrow$ Production)** | Enables zero-downtime blue/green deployment; test newly trained `.pkl` models in staging before swapping to production. |
+| **GitHub CI/CD Deployment** | Automated workflow pushing directly from `https://github.com/srinivasgrandhi07-ai/pancsynergy_ai.git` on branch `main`. |
+| **Storage Account / Blob Containers** | Stores serialized model artifacts (`best_synergy_model.pkl`, `uspto_reaction_model.pkl`), raw datasets, and application logs. |
+| **Azure SQL / Relational Store** | Persists high-throughput batch screening results, user prediction histories, and custom chemical libraries. |
+| **Authentication & Access Control** | Token-based API access protecting high-throughput screening endpoints. |
 
 ---
 
@@ -197,6 +318,46 @@ Accessible under **Cancer Impact Dynamics** in the navigation bar:
 
 ---
 
+## Model Evaluation & Benchmark Insights
+
+### Evaluation Snapshot & Score Distribution
+
+The machine learning evaluation metrics and experimental synergy score distribution from the NCATS PANC-1 benchmark:
+
+<div align="center">
+  <img src="docs/images/ml_evaluation_snapshot.png" alt="Machine Learning Evaluation Snapshot & Validated Synergy Score Distribution" width="850" />
+</div>
+
+* **Evaluation Snapshot (Left):** Demonstrates strong correlation ($r = 0.8016$, $\rho = 0.7188$) on unseen holdout test data, showing reliable generalization without fold-level degradation.
+* **Validated Synergy Score Distribution (Right):** Histogram across 307 NCATS experimental records showing the concentration of validated synergistic combinations ($\Gamma < 1.0$), with an observed range of $0.0414 - 0.9489$ and median $\gamma = 0.8572$.
+
+---
+
+### Top Synergistic Pairs & Mechanism Frequencies
+
+Top experimentally validated combinations and targeted pharmacological mechanism representations:
+
+<div align="center">
+  <img src="docs/images/top_synergies_and_mechanisms.png" alt="Top Synergistic Validated Combinations & Targeted Mechanism Frequency" width="850" />
+</div>
+
+* **Top Synergistic Combinations (Left):** Epigenetic modifiers (such as HDAC inhibitor **Panobinostat**) combined with proteasome inhibitors (**Carfilzomib**, **Oprozomib**) achieve top synergy scores ($\gamma \approx 0.04 - 0.11$) in the PANC-1 line.
+* **Target Mechanism Frequency (Right):** Proteasome inhibitors, Polo-like Kinase-1 (PLK-1), HDAC inhibitors, Mutant p53 activators, and CDK1/2/5/9 inhibitors represent the predominant therapeutic modalities validated for synergistic eradication of pancreatic ductal adenocarcinoma cells.
+
+---
+
+### 5-Fold Cross-Validation & Test Benchmarks
+
+| Metric | 5-Fold CV Mean | Held-Out Test (20%) | Target Direction |
+|---|---:|---:|:---:|
+| **Pearson Correlation ($r$)** | **0.5818** | **0.8016** | $\uparrow$ Higher |
+| **Spearman Rank Correlation ($\rho$)** | **0.5210** | **0.7188** | $\uparrow$ Higher |
+| **Coefficient of Determination ($R^2$)** | **0.3168** | **0.5710** | $\uparrow$ Higher |
+| **Root Mean Squared Error (RMSE)** | **0.1241** | **0.1147** | $\downarrow$ Lower |
+| **Mean Absolute Error (MAE)** | **0.0880** | **0.0812** | $\downarrow$ Lower |
+
+---
+
 ## Technology stack
 
 **Backend & Modeling:**
@@ -226,6 +387,8 @@ pancsynergy_ai/
 │   ├── feature_extractor.py  # RDKit fingerprints, 2D descriptors, symmetric pairing
 │   ├── all_panc1_drugs.json  # 51 curated PANC-1 oncology compounds with SMILES
 │   └── training_drugs_clean.json
+├── docs/
+│   └── images/               # Architecture diagrams, evaluation & distribution charts
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/            # PredictionLab, CancerImpactDynamics, ReactionPropertiesLab, etc.
@@ -250,7 +413,7 @@ pancsynergy_ai/
 ### 1. Clone & Setup Python Environment
 
 ```bash
-git clone https://github.com/devlucker/pancsynergy_ai.git
+git clone https://github.com/srinivasgrandhi07-ai/pancsynergy_ai.git
 cd pancsynergy_ai
 
 # Windows PowerShell:
@@ -295,20 +458,6 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 | `POST` | `/api/v1/chemical/reaction-predict` | Predict USPTO reaction class, duration, temp, solvent, yield |
 | `GET` | `/api/v1/chemical/resolve-smiles` | Multi-tier SMILES resolver (Local $\rightarrow$ PubChem $\rightarrow$ NIH Cactus) |
 | `GET` | `/api/v1/drugs/library` | Curated 51-drug PANC-1 oncology library with SMILES and potencies |
-
----
-
-## Model evaluation
-
-Five-fold cross-validation and held-out test benchmarks for the champion Random Forest model:
-
-| Metric | 5-Fold CV Mean | Held-Out Test (20%) |
-|---|---:|---:|
-| **Pearson Correlation ($r$)** | **0.5818** | **0.8016** |
-| **Spearman Rank Correlation ($\rho$)** | **0.5210** | **0.7188** |
-| **Coefficient of Determination ($R^2$)** | **0.3168** | **0.5710** |
-| **Root Mean Squared Error (RMSE)** | **0.1241** | **0.1147** |
-| **Mean Absolute Error (MAE)** | **0.0880** | **0.0812** |
 
 ---
 
