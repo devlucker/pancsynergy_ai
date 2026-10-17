@@ -11,6 +11,8 @@ import {
   WifiOff,
   Loader2,
   Dna,
+  Atom,
+  TrendingDown,
 } from 'lucide-react';
 import type { Page, ApiStatus } from '@/types';
 import type { BackendState } from '@/hooks/useBackend';
@@ -18,6 +20,8 @@ import type { BackendState } from '@/hooks/useBackend';
 const navItems: { id: Page; label: string; description: string; icon: ReactNode }[] = [
   { id: 'overview', label: 'Overview', description: 'Executive summary & KPIs', icon: <LayoutDashboard size={19} /> },
   { id: 'prediction-lab', label: 'Prediction Lab', description: 'Screen drug pairs', icon: <FlaskConical size={19} /> },
+  { id: 'reaction-properties', label: 'Reaction & Kinetics', description: 'Chemical properties & reaction time', icon: <Atom size={19} /> },
+  { id: 'cancer-impact', label: 'Cancer Impact Dynamics', description: 'Time-course tumor reduction curves', icon: <TrendingDown size={19} /> },
   { id: 'model-performance', label: 'Model Performance', description: 'CV & test set validation', icon: <BarChart3 size={19} /> },
   { id: 'dataset-explorer', label: 'Dataset Explorer', description: '307 validated pairs', icon: <Database size={19} /> },
   { id: 'batch-screening', label: 'Batch Screening', description: 'CSV high-throughput screening', icon: <Layers size={19} /> },

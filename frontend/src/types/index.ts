@@ -79,11 +79,142 @@ export interface ValidatedCombosResponse {
   combinations: ValidatedCombo[];
 }
 
+// ─── Chemical & Reaction Prediction Types ────────────────────────────────────
+
+export interface ChemicalReactionInput {
+  smiles_1: string;
+  smiles_2: string;
+  fetch_pubchem?: boolean;
+}
+
+export interface RDKitProperties {
+  canonical_smiles?: string;
+  molecular_formula?: string;
+  molecular_weight_g_mol?: number;
+  exact_mass?: number;
+  logp_lipophilicity?: number;
+  tpsa_angstrom2?: number;
+  molar_refractivity?: number;
+  h_bond_donors?: number;
+  h_bond_acceptors?: number;
+  rotatable_bonds?: number;
+  heavy_atom_count?: number;
+  ring_count?: number;
+  aromatic_ring_count?: number;
+  fraction_csp3?: number;
+  formal_charge?: number;
+  drug_likeness_qed?: number | null;
+  lipinski_ro5_violations?: number;
+  lipinski_compliant?: boolean;
+  error?: string;
+}
+
+export interface PubChemMetadata {
+  pubchem_cid?: number;
+  iupac_name?: string;
+  pubchem_formula?: string;
+  pubchem_weight?: number | string;
+  xlogp?: number;
+  charge?: number;
+  inchikey?: string;
+  synonyms_sample?: string[];
+  status?: string;
+}
+
+export interface CompoundAnalysis {
+  input_smiles: string;
+  rdkit_properties: RDKitProperties;
+  pubchem_metadata?: PubChemMetadata | null;
+  openbabel_sdf_3d?: string | null;
+}
+
+export interface ReactionCondition {
+  catalyst_reagents: string;
+  solvent: string;
+  temperature_celsius: string;
+  estimated_time: string;
+  expected_yield_range: string;
+  steps: string[];
+}
+
+export interface ReactionProductItem {
+  product_smiles: string;
+  product_properties: RDKitProperties;
+}
+
+export interface ReactionMatch {
+  reaction_type: string;
+  description: string;
+  conditions: ReactionCondition;
+  products: ReactionProductItem[];
+}
+
+export interface PredictedReactionResult {
+  status: string;
+  summary?: string;
+  matched_reaction_count?: number;
+  matched_reactions?: ReactionMatch[];
+  error?: string;
+}
+
+export interface MLCandidate {
+  class_id: number;
+  class_name: string;
+  probability: number;
+  conditions?: Record<string, string>;
+}
+
+export interface MLReactionPrediction {
+  dataset_trained_on: string;
+  predicted_class_id: number;
+  predicted_class_name: string;
+  confidence_score: number;
+  top_candidates: MLCandidate[];
+  model_conditions?: {
+    catalyst_reagents?: string;
+    solvent?: string;
+    temperature?: string;
+    estimated_time?: string;
+    expected_yield?: string;
+  };
+}
+
+export interface ChemicalPredictionResponse {
+  compound_1: CompoundAnalysis;
+  compound_2: CompoundAnalysis;
+  predicted_reaction: PredictedReactionResult;
+  ml_reaction_prediction?: MLReactionPrediction | null;
+}
+
+export interface ChemicalSamplePair {
+  id: string;
+  label: string;
+  category: string;
+  smiles_1: string;
+  name_1: string;
+  smiles_2: string;
+  name_2: string;
+  expected_time: string;
+  expected_reaction: string;
+  description: string;
+}
+
+export interface ServerStatusResponse {
+  status: string;
+  service: string;
+  version: string;
+  default_port: number;
+  synergy_model_loaded: boolean;
+  capabilities: string[];
+}
+
 // ─── UI / Internal Types ─────────────────────────────────────────────────────
 
 export type Page =
   | 'overview'
   | 'prediction-lab'
+  | 'reaction-properties'
+  | 'cancer-impact'
   | 'model-performance'
   | 'dataset-explorer'
   | 'batch-screening'
@@ -109,3 +240,29 @@ export interface BatchResultRow extends BatchRow {
   error?: string;
   status: 'pending' | 'success' | 'error';
 }
+
+export interface DrugLibraryItem {
+  drug_name: string;
+  smiles: string;
+  ac50: number;
+  classType: string;
+}
+
+export interface DrugLibraryResponse {
+  total: number;
+  drugs: DrugLibraryItem[];
+}
+
+export interface ResolvedDrugInfo {
+  found: boolean;
+  drug_name: string;
+  smiles: string;
+  ac50: number;
+  classType: string;
+  source: string;
+  molecular_weight?: string | number;
+  molecular_formula?: string;
+  iupac_name?: string;
+}
+
+

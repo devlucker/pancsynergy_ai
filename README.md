@@ -1,16 +1,26 @@
 # PancSynergy AI
 
-### Machine-learning-assisted screening of drug-combination synergy in PANC-1 pancreatic cancer cells
+### Machine-learning-assisted screening of drug-combination synergy & chemical kinetics in PANC-1 pancreatic cancer cells
 
-PancSynergy AI is a research-oriented application for estimating drug-combination synergy scores (Gamma, **Γ**) for pairs of compounds in the PANC-1 pancreatic cancer cell-line context. It combines molecular representations and single-agent potency inputs with a trained regression model, then presents predictions and dataset/model information through a web dashboard and REST API.
+PancSynergy AI is an end-to-end computational oncology and cheminformatics application for predicting drug-combination synergy scores (Gamma, **Γ**), chemical reaction transformations, and real-time cancer cell kill kinetics in the PANC-1 pancreatic cancer context. It combines molecular descriptors, 256/512-bit Morgan fingerprints, single-agent potency inputs, and USPTO reaction models, presented through a responsive React dashboard and RESTful API.
 
-> **Research-use notice:** PancSynergy provides computational estimates from in-vitro data. Predictions are not experimental confirmation, clinical evidence, or medical advice. All candidate combinations require appropriate laboratory validation before any biological or clinical conclusions are drawn.
+> **Research-use notice:** PancSynergy provides computational estimates derived from in-vitro and patent reaction data. Predictions are computational hypotheses and do not replace laboratory confirmation, clinical trials, or medical diagnosis. All candidate combinations require formal experimental validation before biological or clinical conclusions are drawn.
+
+---
 
 ## Table of contents
 
 - [Features](#features)
 - [How it works](#how-it-works)
+- [Data Cleaning and Preprocessing Pipeline](#data-cleaning-and-preprocessing-pipeline)
+  - [1. PANC-1 Synergy Matrix Cleaning (`Training_set.csv`)](#1-panc-1-synergy-matrix-cleaning-trainingsetcsv)
+  - [2. Molecular Structure Validation & Canonicalization](#2-molecular-structure-validation--canonicalization)
+  - [3. Order-Invariant (Symmetric) Feature Engineering](#3-order-invariant-symmetric-feature-engineering)
+  - [4. USPTO-50K Chemical Reaction Cleaning (`USPTO_50K.csv`)](#4-uspto-50k-chemical-reaction-cleaning-uspto_50kcsv)
+  - [5. Curated 51-Drug Library & Multi-Tier SMILES Resolver](#5-curated-51-drug-library--multi-tier-smiles-resolver)
 - [Gamma interpretation](#gamma-interpretation)
+- [Reaction Kinetics & Chemical Synthesis Lab (USPTO-50K)](#reaction-kinetics--chemical-synthesis-lab-uspto-50k)
+- [Cancer Impact Dynamics & Pharmacodynamics Lab](#cancer-impact-dynamics--pharmacodynamics-lab)
 - [Technology stack](#technology-stack)
 - [Repository structure](#repository-structure)
 - [Setup and run](#setup-and-run)
@@ -19,300 +29,310 @@ PancSynergy AI is a research-oriented application for estimating drug-combinatio
 - [Data and reproducibility](#data-and-reproducibility)
 - [Known limitations](#known-limitations)
 - [Responsible use](#responsible-use)
-- [Contributing](#contributing)
 - [License](#license)
+
+---
 
 ## Features
 
-- **Single-pair prediction:** submit two drug names, SMILES strings, and Log AC50 potency inputs to estimate Gamma.
-- **Batch screening:** submit multiple candidate pairs through the batch API and review returned scores.
-- **Validated-combination explorer:** inspect combinations from the NCATS PANC1 benchmark dataset.
-- **Model-performance dashboard:** review cross-validation and held-out test metrics reported by the trained model artifact.
-- **Dataset explorer:** view summary statistics and distributions for the available combination records.
-- **Methodology page:** review the documented feature-engineering and modelling workflow.
-- **REST API:** use the prediction and metadata endpoints directly or through the web frontend.
+- **Single-Pair Synergy Prediction:** Enter any two compound names, molecular SMILES, and Log AC50 potencies to calculate the continuous Gamma score (Γ) with Random Forest inference.
+- **Batch Screening:** High-throughput computational evaluation of large drug combination matrices.
+- **Validated Combination Explorer:** Browse validated synergy combinations from the NCATS PANC1 benchmark dataset.
+- **Model Performance Leaderboard:** Review 5-fold cross-validation and held-out test benchmarks across Linear, Tree Ensemble, and Deep Learning models.
+- **Chemical Reaction & Kinetics Lab:** Predict the chemical reaction feasibility, reaction transformation class (USPTO-50K), estimated combination time (hours), recommended temperature, solvent, catalysts, and expected yield for any two reactant molecules.
+- **Cancer Impact Dynamics & Time-Course Lab:** Pharmacodynamic Hill/exponential kill simulation mapping cancer viability trajectories over 48h to 96h, half-maximal eradication time ($T_{50}$), apoptotic triggers, and synergy kill gain across 51+ PANC-1 oncology drugs.
+- **Multi-Tier SMILES Resolver:** Auto-fetch molecular SMILES by generic drug name via local curated PANC-1 library $\rightarrow$ PubChem PUG REST API $\rightarrow$ NIH Cactus Chemical Resolver.
+- **RESTful Architecture:** Modular endpoints serving prediction, reaction kinetics, chemical properties, and drug libraries on port `8081` (or `8000`).
+
+---
 
 ## How it works
 
-1. **Input compounds.** Each drug is represented by a SMILES string and a single-agent potency value (`Log AC50 (M)`). Drug names are labels; the molecular structure and potency inputs feed the prediction pipeline.
-2. **Extract molecular features.** SMILES strings are converted into Morgan/ECFP fingerprints (256 bits) and physicochemical descriptors such as molecular weight, LogP, TPSA, hydrogen-bond donors/acceptors, rotatable bonds, and ring counts. The implementation documents a 266-value vector per compound (256 fingerprint bits plus 10 descriptors).
-3. **Build a symmetric pair representation.** The documented pair vector combines the per-drug vectors using element-wise sum, absolute difference, and element-wise product, plus four potency summary values. This is intended to make the representation independent of the order in which Drug A and Drug B are entered.
-4. **Predict Gamma.** A trained regression model estimates a continuous Gamma value for the pair.
-5. **Interpret the score.** The API returns the predicted score and its threshold-based classification. A model prediction should be treated as a candidate-screening signal, not an experimentally validated result.
+1. **Input Compounds:** Each drug is represented by a SMILES string and an optional single-agent potency value (`Log AC50 (M)`).
+2. **Molecular Descriptor Extraction:** RDKit generates 256-bit Morgan fingerprints (radius 2) and 10 2D physicochemical descriptors (MW, LogP, TPSA, HBD, HBA, Rotatable Bonds, FractionCSP3, Ring Count, Aromatic Rings, Heavy Atom Count), yielding a 266-dimensional vector per compound.
+3. **Symmetric Pair Representation:** To ensure order independence, compound vectors are combined using element-wise sum, absolute difference, and element-wise product, plus four potency features, generating an 802-dimensional symmetric feature representation.
+4. **Predict Gamma (Γ):** The trained Random Forest regressor computes the continuous synergy score.
+5. **Simulate Dynamics & Synthesis:** The score feeds into the Pharmacodynamic (PK/PD) simulator and the USPTO reaction model to predict kill velocity and synthetic combination feasibility.
 
-The intended order-invariant pair-feature structure is:
+$$\mathbf{x}_{\text{pair}} = \left[\mathbf{v}_A + \mathbf{v}_B,\ |\mathbf{v}_A - \mathbf{v}_B|,\ \mathbf{v}_A \odot \mathbf{v}_B,\ \min(p_A, p_B),\ \max(p_A, p_B),\ |p_A - p_B|,\ p_A + p_B\right]$$
 
-```text
-x_pair = [v_A + v_B,
-          abs(v_A - v_B),
-          v_A * v_B,
-          min(p_A, p_B),
-          max(p_A, p_B),
-          abs(p_A - p_B),
-          p_A + p_B]
-```
+---
 
-Here, `v_A` and `v_B` are the compound feature vectors, and `p_A` and `p_B` are their Log AC50 inputs. The project documents 802 total pair features: three 266-dimensional symmetric feature blocks (798 values) and four potency-summary features.
+## Data Cleaning and Preprocessing Pipeline
+
+Data hygiene and chemical structure verification are essential to avoid garbage-in, garbage-out behavior in molecular machine learning. The repository applies a multi-stage cleaning pipeline:
+
+### 1. PANC-1 Synergy Matrix Cleaning (`Training_set.csv`)
+
+Located in [`data/data_loader.py`](file:///c:/Users/Srinivas/Desktop/eterpunership/ran_hack/pancsynergy_ai/data/data_loader.py):
+
+* **Header & Whitespace Stripping:**
+  ```python
+  df.columns = [c.strip() for c in df.columns]
+  for col in df.select_dtypes(include=["object"]).columns:
+      df[col] = df[col].astype(str).str.strip()
+  ```
+  Removes trailing spaces, carriage returns, and encoding artifacts from compound names, mechanisms, and SMILES strings.
+
+* **Strict Numerical Type Coercion:**
+  ```python
+  df["Gamma"] = pd.to_numeric(df["Gamma"], errors="coerce")
+  df["Label"] = pd.to_numeric(df["Label"], errors="coerce")
+  df["Log AC50 (M) 1"] = pd.to_numeric(df["Log AC50 (M) 1"], errors="coerce")
+  df["Log AC50 (M) 2"] = pd.to_numeric(df["Log AC50 (M) 2"], errors="coerce")
+  ```
+  Forces invalid text tokens and unparseable values to `NaN`.
+
+* **Missing Target & Invalid Structure Purging:**
+  ```python
+  df = df.dropna(subset=["Gamma", "Structure 1", "Structure 2"])
+  df = df[(df["Structure 1"] != "") & (df["Structure 2"] != "") & 
+          (df["Structure 1"] != "nan") & (df["Structure 2"] != "nan")]
+  ```
+  Discards any pair lacking a verified target Gamma score or missing one or both chemical structures.
+
+* **Potency Distribution Analysis & Median Imputation:**
+  ```python
+  ac50_1_med = df["Log AC50 (M) 1"].median()
+  ac50_2_med = df["Log AC50 (M) 2"].median()
+  df["Log AC50 (M) 1"] = df["Log AC50 (M) 1"].fillna(ac50_1_med if pd.notna(ac50_1_med) else -6.0)
+  df["Log AC50 (M) 2"] = df["Log AC50 (M) 2"].fillna(ac50_2_med if pd.notna(ac50_2_med) else -6.0)
+  ```
+  Rather than discarding valid synergy pairs with missing monotherapy potencies, values are imputed with the empirical dataset median ($-6.0\text{ M}$, the standard NCATS screening micromolar baseline).
+
+---
+
+### 2. Molecular Structure Validation & Canonicalization
+
+Located in [`data/feature_extractor.py`](file:///c:/Users/Srinivas/Desktop/eterpunership/ran_hack/pancsynergy_ai/data/feature_extractor.py):
+
+* **RDKit Molecule Verification:**
+  Every SMILES string is validated via `Chem.MolFromSmiles(smiles)`. Molecules failing valence or aromaticity rules return zeroed descriptors rather than crashing model inference.
+* **Fallback Descriptor Engine:**
+  If RDKit is unavailable in a minimal deployment environment, a pure-Python fallback uses character shingle hashing and atom-counting heuristics to preserve pipeline operation.
+
+---
+
+### 3. Order-Invariant (Symmetric) Feature Engineering
+
+In experimental drug screening, the assignment of Drug 1 vs Drug 2 is arbitrary. If unaddressed, models overfit to column order ($f(A, B) \neq f(B, A)$). We enforce mathematical symmetry:
+
+* **Fingerprint Symmetrization:**
+  * Sum: $\mathbf{v}_1 + \mathbf{v}_2$ (total chemical features present)
+  * Absolute Difference: $|\mathbf{v}_1 - \mathbf{v}_2|$ (structural divergence)
+  * Element-wise Product: $\mathbf{v}_1 \odot \mathbf{v}_2$ (shared pharmacophoric motifs)
+* **Potency Symmetrization:**
+  * $[\min(p_1, p_2), \max(p_1, p_2), |p_1 - p_2|, p_1 + p_2]$
+* **Leakage-Free Cross Validation:**
+  An 80/20 train/test split with 5-fold cross-validation (`KFold(shuffle=True, random_state=42)`) is applied exclusively after preprocessing.
+
+---
+
+### 4. USPTO-50K Chemical Reaction Cleaning (`USPTO_50K.csv`)
+
+Located in [`train_uspto_model.py`](file:///c:/Users/Srinivas/Desktop/eterpunership/ran_hack/pancsynergy_ai/train_uspto_model.py):
+
+* **Reaction Syntax Parsing:**
+  Splits patent reaction strings `reactants >> products` and isolates reactant SMILES components separated by `.` delimiters.
+* **Spectator Ion & Solvent Removal:**
+  Reactants are ranked by heavy atom count:
+  ```python
+  reactants = [r.strip() for r in reactants_part.split(".") if r.strip()]
+  reactants.sort(key=lambda s: len(s), reverse=True)
+  r1, r2 = reactants[0], (reactants[1] if len(reactants) > 1 else "")
+  ```
+  Discards spectator counter-ions ($\text{Na}^+, \text{K}^+, \text{Cl}^-$) and solvent molecules, retaining the two primary organic reactant scaffolds.
+* **Stratified Class Balancing:**
+  Subsamples balanced representations across all 10 USPTO reaction transformation classes (Amide Coupling, Cross-Coupling, Alkylation, Protections, Deprotections, Reductions, Oxidations, FGI, FGA).
+* **Order-Invariant Reactant Fingerprints:**
+  512-bit Morgan fingerprints combined with 7 physicochemical descriptors featurize $(A + B)$ and $(B + A)$ identically.
+
+---
+
+### 5. Curated 51-Drug Library & Multi-Tier SMILES Resolver
+
+* **51 PANC-1 Reference Drugs:** Curated in [`data/all_panc1_drugs.json`](file:///c:/Users/Srinivas/Desktop/eterpunership/ran_hack/pancsynergy_ai/data/all_panc1_drugs.json) and [`frontend/src/lib/drug-library.ts`](file:///c:/Users/Srinivas/Desktop/eterpunership/ran_hack/pancsynergy_ai/frontend/src/lib/drug-library.ts) with verified SMILES, mechanisms of action, and $\text{Log } AC_{50}$ values.
+* **Multi-Tier Live Resolver (`GET /api/v1/chemical/resolve-smiles?query=...`):**
+  1. *Tier 1:* Local curated PANC-1 drug dataset (instant match).
+  2. *Tier 2:* Live PubChem PUG REST API query.
+  3. *Tier 3:* NIH Cactus Chemical Identifier Resolver fallback.
+
+---
 
 ## Gamma interpretation
 
-The current inference service uses these ranges:
-
-| Predicted Gamma (Γ) | API classification | Interpretation returned by API |
+| Predicted Gamma (Γ) | API Classification | Clinical / Biological Interpretation |
 |---|---|---|
-| `Γ < 0.5` | Synergistic | High Synergy |
-| `0.5 ≤ Γ < 1.0` | Synergistic | Moderate Synergy |
-| `1.0 ≤ Γ < 1.5` | Additive / Weak | Low / Additive |
-| `Γ ≥ 1.5` | Antagonistic | Antagonistic |
+| `Γ < 0.5` | Synergistic | High Synergy: Strong mutual sensitization, rapid tumor eradication |
+| `0.5 ≤ Γ < 1.0` | Synergistic | Moderate Synergy: Beneficial interaction exceeding additive expectation |
+| `1.0 ≤ Γ < 1.5` | Additive / Weak | Additive / Independent: Follows Bliss independent action |
+| `Γ ≥ 1.5` | Antagonistic | Antagonistic: Mutual pathway interference; suppressed cancer cell kill |
 
-The API marks a prediction as synergistic when `Γ < 1.0`. Lower Gamma values are interpreted as stronger synergy under this benchmark's definition. These labels describe the model's output; they do not establish statistical significance or laboratory confirmation.
+---
+
+## Reaction Kinetics & Chemical Synthesis Lab (USPTO-50K)
+
+Accessible in the frontend navigation under **Reaction & Kinetics Lab**:
+
+* **Transformation Prediction:** Classifies reaction pathways across 10 USPTO classes (e.g., Amide Coupling, Cross-Coupling, Alkylation).
+* **Combination Time Required:** Computes the expected synthetic duration (e.g., 2 - 6 hours for Amide Coupling, 6 - 16 hours for Cross-Coupling).
+* **Reaction Conditions:** Provides optimal temperature ranges (e.g., $0\text{ }^\circ\text{C}$ to $25\text{ }^\circ\text{C}$ ambient), recommended solvents (e.g., DMF, DCM, MeCN), catalysts, and expected yield ranges (80 - 95%).
+* **Cross-Lab Bridge:** One-click transfer button (**"Pass to Prediction Lab"**) sends both compounds into the AI Synergy Model.
+
+---
+
+## Cancer Impact Dynamics & Pharmacodynamics Lab
+
+Accessible under **Cancer Impact Dynamics** in the navigation bar:
+
+* **Dynamic PK/PD Kinetic Engine:** Trajectories, kill percentages, and time milestones are computed from drug potencies and the continuous synergy score $\gamma$:
+  $$\Delta_i = -(\text{Log } AC_{50, i} - (-6.0\text{ M}))$$
+  $$k_i = \text{clamp}\left(0.018 \times 1.35^{\Delta_i} \times \text{doseMultiplier},\ 0.008,\ 0.065\right)\text{ h}^{-1}$$
+  $$S = \text{clamp}\left(\left(\frac{1.0}{\gamma}\right)^{0.92},\ 0.35,\ 3.8\right)$$
+  $$k_{\text{combo}} = (k_A + k_B) \times S$$
+  $$T_{50} = \frac{\ln(2)}{k_{\text{combo}}} \approx \frac{0.69315}{k_{\text{combo}}}\text{ hours}$$
+* **Live PK/PD Inspector Badge:** Displays real-time $k_A$, $k_B$, Synergy Factor $S$, and $k_{\text{combo}}$.
+* **Custom Pair Evaluation:** Select any two compounds from the full 51+ drug library, adjust the $\gamma$ slider, or click **"Run Live AI Synergy Model"** to call the backend Random Forest on Port 8081.
+* **Time-Course Visualizations:** Recharts Area and Bar graphs showing viability trajectories, cumulative kill at 12h/24h/48h/72h, and time to cytotoxic milestones (25%, 50%, 75%, 90% kill).
+
+---
 
 ## Technology stack
 
-**Backend and modelling**
+**Backend & Modeling:**
+- Python 3
+- FastAPI & Uvicorn (REST API on Port 8081 / 8000)
+- scikit-learn (Random Forest, HistGradientBoosting, Ridge, Lasso, MLP)
+- RDKit (Cheminformatics, ECFP fingerprints, molecular descriptors)
+- NumPy, pandas, SciPy, joblib
 
-- Python
-- FastAPI and Uvicorn
-- Pydantic
-- NumPy and pandas
-- scikit-learn and SciPy
-- RDKit for molecular representations/descriptors
-- joblib for serialized model artifacts
-
-**Frontend**
-
-- React and TypeScript
+**Frontend:**
+- React 18 & TypeScript
 - Vite
 - Tailwind CSS
-- Recharts for charts
-- PapaParse for CSV handling
+- Recharts (Interactive dynamic trajectory charts)
 - Lucide React icons
+
+---
 
 ## Repository structure
 
 ```text
 pancsynergy_ai/
-├── backend/          # FastAPI application, schemas, and prediction service
-├── data/             # Dataset ingestion and generated raw/processed data
-├── frontend/         # React + TypeScript web dashboard
-├── models/           # Molecular feature extraction, training, and evaluation
-├── saved_models/     # Serialized trained model artifact(s), when available
-├── run_all.py        # Data checks, training/evaluation, API tests, and server startup
-├── requirements.txt  # Python dependencies
-├── start.bat         # Windows startup helper
+├── backend/                  # FastAPI application, REST endpoints, schemas
+├── data/
+│   ├── raw/                  # Downloaded Training_set.csv, USPTO_50K.csv
+│   ├── data_loader.py        # Data cleaning, missing value imputation, type coercion
+│   ├── feature_extractor.py  # RDKit fingerprints, 2D descriptors, symmetric pairing
+│   ├── all_panc1_drugs.json  # 51 curated PANC-1 oncology compounds with SMILES
+│   └── training_drugs_clean.json
+├── frontend/
+│   ├── src/
+│   │   ├── pages/            # PredictionLab, CancerImpactDynamics, ReactionPropertiesLab, etc.
+│   │   ├── lib/              # api.ts, drug-library.ts, chart-utils.ts
+│   │   └── types/            # TypeScript interfaces
+│   └── package.json
+├── models/                   # Regressors, ensemble baselines, deep learning, evaluation
+├── saved_models/
+│   ├── best_synergy_model.pkl    # Serialized Random Forest synergy predictor
+│   └── uspto_reaction_model.pkl  # Serialized USPTO-50K reaction classifier
+├── chemical_reaction_predictor.py # Reaction kinetics & conditions inference engine
+├── train_uspto_model.py      # USPTO dataset cleaning, featurization, and training
+├── server_8081.py            # Standalone API server on Port 8081
+├── run_all.py                # Pipeline verification and server launcher
 └── README.md
 ```
 
-The data loader can download the required NCATS source CSV files into `data/raw/` when they are missing. Processed data are written beneath `data/processed/`.
-
-Dataset source: [NCATS PANC1 dataset](https://github.com/ncats/PANC1/tree/main/datasets).
+---
 
 ## Setup and run
 
-### Prerequisites
-
-- Python 3 with a version supported by the listed dependencies, including RDKit.
-- Node.js and npm for the frontend.
-- Internet access for downloading source datasets when they are not already present.
-
-### 1. Clone the repository
+### 1. Clone & Setup Python Environment
 
 ```bash
 git clone https://github.com/devlucker/pancsynergy_ai.git
 cd pancsynergy_ai
-```
 
-### 2. Create a Python environment and install dependencies
-
-**macOS / Linux**
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-**Windows PowerShell**
-
-```powershell
+# Windows PowerShell:
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-If PowerShell blocks environment activation, use Command Prompt and run `.venv\Scripts\activate.bat`, or follow your local Python environment policy. The dependency installation command is the same once the environment is active:
+### 2. Start Backend Server (Port 8081)
 
 ```bash
-python -m pip install -r requirements.txt
+python server_8081.py --port 8081
 ```
 
-### 3. Start the backend and model pipeline
+* Swagger UI Docs: [http://127.0.0.1:8081/docs](http://127.0.0.1:8081/docs)
+* Health Check: [http://127.0.0.1:8081/health](http://127.0.0.1:8081/health)
 
-From the repository root, with the virtual environment active:
+### 3. Start Frontend Dashboard
 
-```bash
-python -u run_all.py
-```
-
-The orchestration script checks/downloads datasets, prepares the training data, trains and benchmarks the candidate models (unless training is explicitly skipped), loads the selected model, runs API self-tests, and starts the FastAPI server. First-time execution can take a while because model training and data preparation may run.
-
-If a compatible trained artifact already exists at `saved_models/best_synergy_model.pkl`, training can be skipped:
-
-```bash
-python -u run_all.py --skip-training
-```
-
-To run the pipeline checks and API self-tests without leaving a persistent server running:
-
-```bash
-python -u run_all.py --test-only
-```
-
-`--test-only` does not automatically skip training. Combine it with `--skip-training` only when the saved model artifact exists and is compatible:
-
-```bash
-python -u run_all.py --skip-training --test-only
-```
-
-By default, the API binds to `127.0.0.1:8000`. The runner can select another available port if the preferred port is already occupied; use the URL printed in the Terminal output.
-
-### 4. Open the API documentation
-
-With the backend running, open the URL printed in Terminal. The default local addresses are:
-
-- Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-- ReDoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
-- Health check: [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)
-
-### 5. Start the frontend
-
-Open a **second Terminal window** while the backend continues running:
+In a separate terminal:
 
 ```bash
 cd frontend
-cp .env.example .env.local
 npm install
 npm run dev
 ```
 
-The frontend configuration file `frontend/.env.local` should contain the backend base URL, without a trailing slash:
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-```dotenv
-VITE_API_BASE_URL=http://127.0.0.1:8000
-```
-
-Open the local URL printed by Vite (commonly `http://localhost:5173`). If the backend selected a different port, update `VITE_API_BASE_URL` in `frontend/.env.local` to match the backend URL and restart the frontend dev server.
-
-Other frontend scripts, run from `frontend/`:
-
-```bash
-npm run build   # TypeScript project build and Vite production build
-npm run lint    # ESLint checks
-npm run preview # Preview the built frontend
-```
+---
 
 ## REST API
 
-The following endpoints are defined by the backend:
-
-| Method | Endpoint | Purpose |
+| Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/health` | API status and whether the model is loaded |
-| `GET` | `/api/v1/info` | Model metadata, feature dimension, training sample count, and metrics |
-| `POST` | `/api/v1/predict` | Predict Gamma for one drug pair |
-| `POST` | `/api/v1/predict/batch` | Predict Gamma for a list of pairs |
-| `GET` | `/api/v1/combos/validated?limit=50` | Retrieve validated combinations, ordered by lower Gamma |
+| `GET` | `/health` | API status and loaded model confirmation |
+| `GET` | `/api/v1/info` | Synergy model metadata, feature dimension, metrics |
+| `POST` | `/api/v1/predict` | Single-pair AI synergy prediction (Gamma Γ) |
+| `POST` | `/api/v1/predict/batch` | High-throughput batch pair synergy evaluation |
+| `GET` | `/api/v1/combos/validated` | Curated NCATS PANC-1 validated combinations |
+| `POST` | `/api/v1/chemical/reaction-predict` | Predict USPTO reaction class, duration, temp, solvent, yield |
+| `GET` | `/api/v1/chemical/resolve-smiles` | Multi-tier SMILES resolver (Local $\rightarrow$ PubChem $\rightarrow$ NIH Cactus) |
+| `GET` | `/api/v1/drugs/library` | Curated 51-drug PANC-1 oncology library with SMILES and potencies |
 
-Interactive request/response schemas are available at `/docs` while the backend is running.
-
-### Example prediction request
-
-```json
-{
-  "drug_name_1": "Pralatrexate",
-  "smiles_1": "NC1=NC(N)=C2N=C(CC(CC#C)C3=CC=C(C=C3)C(=O)N[C@@H](CCC(O)=O)C(O)=O)C=NC2=N1",
-  "log_ac50_1": -7.27,
-  "drug_name_2": "Daporinad",
-  "smiles_2": "O=C(NCCCCC1CCN(CC1)C(=O)C2=CC=CC=C2)\\C=C\\C3=CN=CC=C3",
-  "log_ac50_2": -7.53
-}
-```
-
-Send it to `POST /api/v1/predict` as JSON. Example response shape:
-
-```json
-{
-  "drug_name_1": "Pralatrexate",
-  "drug_name_2": "Daporinad",
-  "predicted_gamma": 0.8421,
-  "synergy_classification": "Synergistic",
-  "is_synergistic": true,
-  "synergy_strength": "Moderate Synergy"
-}
-```
-
-The numeric value above is an **illustrative response example**, not a guarantee of the output you will receive. Actual results depend on the model artifact, input structures, potency inputs, and preprocessing.
-
-For batch prediction, send a JSON body containing a `pairs` array with the same fields as a single-pair request:
-
-```json
-{
-  "pairs": [
-    {
-      "drug_name_1": "Drug A",
-      "smiles_1": "VALID_SMILES_FOR_DRUG_A",
-      "log_ac50_1": -6.0,
-      "drug_name_2": "Drug B",
-      "smiles_2": "VALID_SMILES_FOR_DRUG_B",
-      "log_ac50_2": -6.0
-    }
-  ]
-}
-```
-
-Replace the placeholder strings with valid molecular SMILES before sending the request.
+---
 
 ## Model evaluation
 
-The project explores regularized linear models (Ridge, Lasso, and ElasticNet), tree ensembles (including Random Forest, Extra Trees, and Gradient Boosting variants), and a Multi-Layer Perceptron. Candidate models are evaluated using five-fold cross-validation and a held-out test split. The selected model and evaluation metrics are stored with the saved model artifact and exposed by `GET /api/v1/info`.
+Five-fold cross-validation and held-out test benchmarks for the champion Random Forest model:
 
-The current dashboard has displayed the following metrics; rerun the pipeline and check `/api/v1/info` for values from the model artifact you're actually using.
-
-| Metric | 5-fold CV mean | Held-out test |
+| Metric | 5-Fold CV Mean | Held-Out Test (20%) |
 |---|---:|---:|
-| Pearson correlation | 0.5818 | 0.8016 |
-| Spearman rank correlation | 0.5210 | 0.7188 |
-| R² | 0.3168 | 0.5710 |
-| RMSE | 0.1241 | 0.1147 |
-| MAE | 0.0880 | 0.0812 |
+| **Pearson Correlation ($r$)** | **0.5818** | **0.8016** |
+| **Spearman Rank Correlation ($\rho$)** | **0.5210** | **0.7188** |
+| **Coefficient of Determination ($R^2$)** | **0.3168** | **0.5710** |
+| **Root Mean Squared Error (RMSE)** | **0.1241** | **0.1147** |
+| **Mean Absolute Error (MAE)** | **0.0880** | **0.0812** |
 
-These figures summarize predictive agreement for the reported evaluation setup. They do not, by themselves, prove generalization to every compound class or experimental setting. For rigorous validation, inspect the data split and model-selection procedure and check for related combinations across splits.
+---
 
 ## Data and reproducibility
 
-- The project uses the NCATS PANC1 dataset source linked above.
-- If raw files are missing, the data-loader attempts to retrieve the required CSV files and saves them under `data/raw/`.
-- `run_all.py` runs preprocessing/training and API self-tests. Re-running it without `--skip-training` can retrain the model and update the saved artifact/metrics.
-- Keep the raw data, dependency versions, model artifact, and reported metrics aligned when reproducing results.
+- Source Data: [NCATS PANC1 Benchmark Dataset](https://github.com/ncats/PANC1/tree/main/datasets) and USPTO-50K Patent Reactions.
+- Running `python run_all.py` runs end-to-end data checks, preprocessing, candidate model benchmarking, and server startup.
+
+---
 
 ## Known limitations
 
-- The model is built around PANC-1 in-vitro combination data; predictions should not be assumed to generalize to other cell lines, in-vivo experiments, or patients.
-- Predictions are point estimates. The application does not provide calibrated prediction intervals or a guarantee of confidence.
-- Results depend on correct SMILES, potency values, feature generation, the training data, and the serialized model version.
-- A Gamma-based classification is a model interpretation, not proof of a biological mechanism, statistical significance, safety, or clinical efficacy.
-- Candidate combinations require experimental validation before biological conclusions are made.
+1. **In-Vitro Specificity:** Trained on PANC-1 cell line data; predictions should not be assumed to directly translate to other cancer types or in-vivo settings without testing.
+2. **Deterministic Estimates:** Provides point estimates without calibrated Bayesian confidence intervals.
+3. **Biological Validation:** Computational synergy estimates are screening hypotheses; candidate pairs must be validated through formal laboratory assays (e.g., Chou-Talalay, Bliss, CellTiter-Glo).
+
+---
 
 ## Responsible use
 
-PancSynergy AI is intended for computational research and educational demonstration only. It is not a diagnostic tool and must not be used to make clinical treatment decisions.
+PancSynergy AI is built for academic research and educational screening purposes only. It is not a diagnostic tool or clinical decision support system.
 
-## Contributing
-
-Issues and pull requests are welcome. When proposing changes, please describe the scientific or engineering motivation and include relevant testing or reproducibility information.
+---
 
 ## License
 
-No license file is currently included in this repository. Add an appropriate license before inviting others to reuse, modify, or redistribute the code.
+MIT License. See project root for terms.

@@ -36,7 +36,6 @@ import {
   ArrowRight,
   TrendingUp,
   Layers,
-  Sparkles,
   AlertTriangle,
 } from 'lucide-react';
 
@@ -92,10 +91,6 @@ export default function Overview({ backend, onNavigate }: Props) {
       {/* ── 1. Executive Project Mission & Context Banner ─────────────────────── */}
       <div className="rounded-2xl bg-gradient-to-r from-teal-700 via-teal-800 to-slate-900 text-white p-7 shadow-md relative overflow-hidden">
         <div className="relative z-10 max-w-3xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/15 text-teal-100 text-xs font-semibold backdrop-blur-sm border border-white/10">
-            <Sparkles size={13} className="text-teal-300" />
-            <span>Hackathon Demonstration · Computational Oncology</span>
-          </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">
             Predicting Drug Combination Synergy in Pancreatic Cancer
           </h1>

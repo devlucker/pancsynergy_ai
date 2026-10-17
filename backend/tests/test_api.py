@@ -44,12 +44,53 @@ def test_single_prediction():
         assert "is_synergistic" in data
         assert "synergy_classification" in data
 
+def test_server_status():
+    response = client.get("/api/v1/server/status")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "online"
+    assert data["default_port"] == 8081
+
+def test_chemical_samples():
+    response = client.get("/api/v1/chemical/samples")
+    assert response.status_code == 200
+    samples = response.json()
+    assert len(samples) >= 3
+
+def test_chemical_reaction_and_properties():
+    payload = {
+        "smiles_1": "CC(=O)O",
+        "smiles_2": "CCN",
+        "fetch_pubchem": False
+    }
+    response = client.post("/api/v1/chemical/reaction-predict", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert "compound_1" in data
+    assert "compound_2" in data
+    assert "predicted_reaction" in data
+    # Verify chemical/physical properties
+    assert "molecular_weight_g_mol" in data["compound_1"]["rdkit_properties"]
+    assert "logp_lipophilicity" in data["compound_1"]["rdkit_properties"]
+    # Verify reaction duration/time estimation
+    rxn = data["predicted_reaction"]
+    assert rxn["status"] == "Reaction predicted successfully"
+    assert len(rxn["matched_reactions"]) > 0
+    assert "estimated_time" in rxn["matched_reactions"][0]["conditions"]
+
 if __name__ == "__main__":
     print("Running API tests...")
     test_health_endpoint()
     print("Health check passed.")
+    test_server_status()
+    print("Server status endpoint passed.")
+    test_chemical_samples()
+    print("Chemical samples passed.")
+    test_chemical_reaction_and_properties()
+    print("Chemical reaction & properties prediction passed.")
     test_validated_combos()
     print("Validated combos passed.")
     test_single_prediction()
     print("Single prediction passed.")
     print("All API tests completed successfully!")
+
